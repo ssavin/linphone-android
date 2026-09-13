@@ -13,6 +13,10 @@
     <color name="orange_main_100">#FFEACB</color>
     <color name="orange_main_500">#FF5E00</color>
 
+    <!-- KiwiCall brand (cobalt blue) — used as the default theme instead of orange. -->
+    <color name="kiwicall_main_100">#DEE8FC</color>
+    <color name="kiwicall_main_500">#2563EB</color>
+
     <color name="gray_main2_100">#EEF6F8</color>
     <color name="gray_main2_200">#DFECF2</color>
     <color name="gray_main2_300">#C0D1D9</color>
