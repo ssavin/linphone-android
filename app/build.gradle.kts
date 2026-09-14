@@ -131,6 +131,18 @@ android {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
     signingConfigs {
+        getByName("debug") {
+            // KiwiCall: a checked-in, fixed debug keystore instead of AGP's implicit
+            // per-machine ~/.android/debug.keystore. Without this, every CI runner
+            // (a fresh VM each time) generates its own random debug key, so each
+            // build produces an APK with a DIFFERENT signature — Android then refuses
+            // to install it over a previous install ("app not installed") until the
+            // old one is uninstalled by hand. Standard, non-secret debug credentials.
+            storeFile = project.file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         create("release") {
             val keyStorePath = keystoreProperties["storeFile"] as String
             val keyStore = project.file(keyStorePath)
@@ -148,6 +160,7 @@ android {
 
     buildTypes {
         getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
             if (useDifferentPackageNameForDebugBuild) {
                 applicationIdSuffix = ".debug"
             }
