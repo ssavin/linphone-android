@@ -120,6 +120,12 @@
     <string name="file_successfully_exported_to_media_store_toast">Файл экспортирован в собственную галерею</string>
     <string name="export_file_to_media_store_error_toast">Ошибка при попытке экспортировать файл в собственную галерею</string>
     <string name="assistant_login_third_party_sip_account_title">Сторонний SIP-аккаунт</string>
+    <string name="assistant_kiwicall_login_title">Вход в KiwiCall</string>
+    <string name="assistant_kiwicall_login_email_hint">Email</string>
+    <string name="assistant_kiwicall_login_scan_qr">Сканировать QR-код</string>
+    <string name="assistant_kiwicall_login_manual_sip">Настроить SIP вручную</string>
+    <string name="assistant_kiwicall_login_error">Ошибка соединения: %1$s</string>
+    <string name="assistant_kiwicall_login_network_error">Не удалось связаться с сервером. Проверьте соединение и попробуйте снова.</string>
     <string name="settings_contacts_carddav_use_as_default_title">Хранить недавно созданные контакты здесь</string>
     <string name="settings_contacts_carddav_deleted_toast">Учетная запись CardDAV удалена</string>
     <string name="settings_contacts_ldap_server_url_title">URL-адрес сервера (не может быть пустым)</string>

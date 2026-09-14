@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <import type="android.text.InputType" />
+        <variable
+            name="backClickListener"
+            type="View.OnClickListener" />
+        <variable
+            name="scanQrCodeClickListener"
+            type="View.OnClickListener" />
+        <variable
+            name="manualSipClickListener"
+            type="View.OnClickListener" />
+        <variable
+            name="viewModel"
+            type="org.linphone.ui.assistant.viewmodel.KiwiCallLoginViewModel" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/color_main2_000">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    style="@style/icon_top_bar_button_style"
+                    android:id="@+id/back"
+                    android:onClick="@{backClickListener}"
+                    android:layout_width="@dimen/top_bar_height"
+                    android:layout_height="@dimen/top_bar_height"
+                    android:src="@drawable/caret_left"
+                    android:contentDescription="@string/content_description_go_back_icon"
+                    app:tint="?attr/color_main2_500"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/assistant_page_title_style"
+                    android:id="@+id/kiwicall_login_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/assistant_kiwicall_login_title"
+                    android:textColor="?attr/color_text"
+                    app:layout_constraintTop_toTopOf="@id/back"
+                    app:layout_constraintBottom_toBottomOf="@id/back"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/header_style"
+                    android:id="@+id/email_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="38dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:labelFor="@id/email"
+                    android:text="@string/assistant_kiwicall_login_email_hint"
+                    app:layout_constraintTop_toBottomOf="@id/kiwicall_login_title"
+                    app:layout_constraintStart_toStartOf="@id/email"/>
+
+                <androidx.appcompat.widget.AppCompatEditText
+                    style="@style/default_text_style"
+                    android:id="@+id/email"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="@={viewModel.email}"
+                    android:textSize="14sp"
+                    android:textColor="?attr/color_main2_600"
+                    android:background="@drawable/edit_text_background"
+                    android:inputType="textEmailAddress"
+                    android:hint="@string/assistant_kiwicall_login_email_hint"
+                    app:layout_constraintWidth_max="@dimen/text_input_max_width"
+                    app:layout_constraintTop_toBottomOf="@id/email_label"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/header_style"
+                    android:id="@+id/password_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="16dp"
+                    android:labelFor="@id/password"
+                    android:text="@string/password"
+                    app:layout_constraintTop_toBottomOf="@id/email"
+                    app:layout_constraintStart_toStartOf="@id/password"/>
+
+                <androidx.appcompat.widget.AppCompatEditText
+                    style="@style/default_text_style"
+                    android:id="@+id/password"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="@={viewModel.password}"
+                    android:textSize="14sp"
+                    android:textColor="?attr/color_main2_600"
+                    android:background="@drawable/edit_text_background"
+                    android:hint="@string/password"
+                    passwordInputType="@{viewModel.showPassword ? InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD : InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD, default=textPassword}"
+                    app:layout_constraintWidth_max="@dimen/text_input_max_width"
+                    app:layout_constraintTop_toBottomOf="@id/password_label"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                <ImageView
+                    android:onClick="@{() -> viewModel.toggleShowPassword()}"
+                    android:id="@+id/eye"
+                    android:layout_width="@dimen/icon_size"
+                    android:layout_height="0dp"
+                    android:layout_marginEnd="20dp"
+                    android:padding="4dp"
+                    android:contentDescription="@string/content_description_toggle_password_visibility"
+                    android:src="@{viewModel.showPassword ? @drawable/eye_slash : @drawable/eye, default=@drawable/eye}"
+                    app:tint="?attr/color_main2_500"
+                    app:layout_constraintEnd_toEndOf="@id/password"
+                    app:layout_constraintTop_toTopOf="@id/password"
+                    app:layout_constraintBottom_toBottomOf="@id/password" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/primary_button_label_style"
+                    android:onClick="@{() -> viewModel.login()}"
+                    android:enabled="@{viewModel.loginEnabled &amp;&amp; !viewModel.loginInProgress, default=false}"
+                    android:id="@+id/login"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="@string/assistant_account_login"
+                    app:layout_constraintWidth_max="@dimen/button_max_width"
+                    app:layout_constraintTop_toBottomOf="@id/password"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/secondary_button_label_style"
+                    android:onClick="@{scanQrCodeClickListener}"
+                    android:id="@+id/scan_qr_code"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="@string/assistant_kiwicall_login_scan_qr"
+                    app:layout_constraintWidth_max="@dimen/button_max_width"
+                    app:layout_constraintTop_toBottomOf="@id/login"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:onClick="@{manualSipClickListener}"
+                    android:id="@+id/manual_sip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="@dimen/screen_bottom_margin"
+                    android:padding="8dp"
+                    android:text="@string/assistant_kiwicall_login_manual_sip"
+                    android:textColor="?attr/color_main1_500"
+                    android:textSize="14sp"
+                    app:layout_constraintTop_toBottomOf="@id/scan_qr_code"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

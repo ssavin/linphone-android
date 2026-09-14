@@ -143,7 +143,13 @@ class LandingFragment : GenericFragment() {
 
         viewModel.skipLandingToThirdPartySipAccountEvent.observe(viewLifecycleOwner) {
             it.consume {
-                goToLoginThirdPartySipAccountFragment(true)
+                // KiwiCall: skip the generic landing/create-account screen and go straight to
+                // our own quick-setup screen (email+password or QR) instead of the raw manual
+                // SIP form — manual entry is still reachable from there as a fallback link.
+                if (findNavController().currentDestination?.id == R.id.landingFragment) {
+                    val action = LandingFragmentDirections.actionLandingFragmentToKiwiCallLoginFragment()
+                    findNavController().navigate(action)
+                }
             }
         }
 

@@ -53,4 +53,12 @@ lime_update_threshold=86400
 [alerts]
 alerts_enabled=1
 
+[ui]
+# KiwiCall: on first launch skip the generic Linphone landing/create-account
+# screen and go straight to the KiwiCall login screen (email+password or QR)
+# instead of a raw manual SIP form.
+assistant_go_directly_to_third_party_sip_account_login=1
+assistant_third_party_sip_account_domain=200.165.231.27:5060
+assistant_third_party_sip_account_transport=UDP
+
 ## End of factory rc

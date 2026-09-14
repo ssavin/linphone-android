@@ -165,6 +165,12 @@
     <string name="assistant_qr_code_invalid_toast">Invalid QR code!</string>
     <string name="assistant_login_third_party_sip_account">Use a third party SIP account</string>
     <string name="assistant_login_third_party_sip_account_title">Third party SIP account</string>
+    <string name="assistant_kiwicall_login_title">Sign in to KiwiCall</string>
+    <string name="assistant_kiwicall_login_email_hint">Email</string>
+    <string name="assistant_kiwicall_login_scan_qr">Scan QR code</string>
+    <string name="assistant_kiwicall_login_manual_sip">Set up SIP manually</string>
+    <string name="assistant_kiwicall_login_error">Connection error: %1$s</string>
+    <string name="assistant_kiwicall_login_network_error">Could not reach the server. Check your connection and try again.</string>
     <string name="assistant_login_using_single_sign_on">Single sign on</string>
     <string name="assistant_login_cant_parse_address_toast">SIP address is invalid!</string>
     <string name="assistant_login_address_without_username_toast">SIP address doesn\'t contains a username!</string>

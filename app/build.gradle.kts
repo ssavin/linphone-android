@@ -269,6 +269,8 @@ dependencies {
     implementation(libs.photoview)
     // https://github.com/openid/AppAuth-Android/blob/master/LICENSE Apache v2.0
     implementation(libs.openid.appauth)
+    // https://github.com/square/okhttp/blob/master/LICENSE.txt Apache v2.0
+    implementation(libs.okhttp)
 
     implementation(libs.linphone)
 
