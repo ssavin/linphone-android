@@ -7,6 +7,10 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Needed to detect when the network comes back, so a lost SIP
+    registration can be refreshed instead of silently staying dead until
+    the app is reopened -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 

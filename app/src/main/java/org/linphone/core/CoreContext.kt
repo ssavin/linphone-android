@@ -33,6 +33,8 @@ import android.hardware.SensorManager
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
@@ -41,6 +43,7 @@ import android.os.PowerManager
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
+import androidx.core.content.ContextCompat
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -145,6 +148,15 @@ class CoreContext
     }
 
     private var keepAliveServiceStarted = false
+
+    // Registration state is purely event-driven (AccountModel only updates on
+    // Core.onRegistrationStateChanged) - if the process gets frozen by Doze
+    // and the SDK's own refresh timer stops advancing, nothing ever fires a
+    // new event, so the UI can keep showing "Connected" long after the actual
+    // SIP registration silently died. Forcing a refresh whenever the network
+    // comes back is a cheap safety net that doesn't depend on that timer
+    // still being alive.
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     private lateinit var proximityWakeLock: PowerManager.WakeLock
 
@@ -813,6 +825,18 @@ class CoreContext
             }
         }
 
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                Log.i(
+                    "$TAG Network [$network] became available, forcing a registration refresh in case a previous one was silently lost while the process was frozen"
+                )
+                postOnCoreThread { core -> core.refreshRegisters() }
+            }
+        }
+        connectivityManager.registerDefaultNetworkCallback(callback)
+        networkCallback = callback
+
         val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
         if (!powerManager.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
             Log.w("$TAG PROXIMITY_SCREEN_OFF_WAKE_LOCK isn't supported on this device!")
@@ -835,6 +859,12 @@ class CoreContext
         Log.w("$TAG Core is being shut down, notifying managers so they can remove their listeners and do some cleanup if needed")
         val sensorManager = context.getSystemService(SENSOR_SERVICE) as SensorManager
         sensorManager.unregisterListener(proximitySensorListener)
+
+        networkCallback?.let {
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            connectivityManager.unregisterNetworkCallback(it)
+            networkCallback = null
+        }
 
         contactsManager.onCoreStopped(core)
         telecomManager.onCoreStopped(core)
@@ -1216,6 +1246,7 @@ class CoreContext
     fun startKeepAliveService() {
         if (keepAliveServiceStarted) {
             Log.w("$TAG Keep alive service already started, skipping")
+            return
         }
 
         val serviceIntent = Intent(Intent.ACTION_MAIN).setClass(
@@ -1224,7 +1255,17 @@ class CoreContext
         )
         Log.i("$TAG Starting Keep alive for third party accounts Service")
         try {
-            context.startService(serviceIntent)
+            // Must use startForegroundService(), not startService(): the latter
+            // is rejected by Android (IllegalStateException/
+            // ForegroundServiceStartNotAllowedException) when called while the
+            // app has no foreground component, which is exactly when this is
+            // called from a resurrected/background process. The exception used
+            // to be swallowed here with no retry, silently leaving the process
+            // with no foreground protection, no wake lock, and the SIP
+            // registration refresh timer free to be frozen by Doze - while the
+            // UI kept showing the last known "Connected" state forever, since
+            // nothing ever fired a state change to contradict it.
+            ContextCompat.startForegroundService(context, serviceIntent)
             keepAliveServiceStarted = true
         } catch (e: Exception) {
             Log.e("$TAG Failed to start keep alive service: $e")
