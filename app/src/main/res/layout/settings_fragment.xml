@@ -12,6 +12,9 @@
             name="turnOnVfsClickListener"
             type="View.OnClickListener" />
         <variable
+            name="sipSettingsClickListener"
+            type="View.OnClickListener" />
+        <variable
             name="advancedCallSettingsClickListener"
             type="View.OnClickListener" />
         <variable
@@ -71,6 +74,25 @@
 
                 <androidx.appcompat.widget.AppCompatTextView
                     style="@style/section_header_style"
+                    android:id="@+id/sip_settings"
+                    android:onClick="@{sipSettingsClickListener}"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/settings_sip_title"
+                    android:drawableEnd="@drawable/caret_right"
+                    android:drawableTint="?attr/color_main2_600"
+                    android:background="@drawable/squircle_transparent_button_background"
+                    app:layout_constraintWidth_max="@dimen/section_max_width"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/section_header_style"
                     android:id="@+id/security"
                     android:onClick="@{() -> viewModel.toggleSecurityExpand()}"
                     android:layout_width="0dp"
@@ -86,7 +108,7 @@
                     app:layout_constraintWidth_max="@dimen/section_max_width"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"/>
+                    app:layout_constraintTop_toBottomOf="@id/sip_settings"/>
 
                 <include
                     android:id="@+id/security_settings"

@@ -41,6 +41,7 @@ import org.linphone.compatibility.Compatibility
 import org.linphone.core.tools.Log
 import org.linphone.databinding.SettingsFragmentBinding
 import org.linphone.ui.GenericActivity
+import org.linphone.ui.assistant.AssistantActivity
 import org.linphone.ui.main.fragment.GenericMainFragment
 import org.linphone.utils.ConfirmationDialogModel
 import org.linphone.ui.main.settings.viewmodel.SettingsViewModel
@@ -155,6 +156,30 @@ class SettingsFragment : GenericMainFragment() {
             goBack()
         }
 
+        binding.setSipSettingsClickListener {
+            val model = ConfirmationDialogModel()
+            val dialog = DialogUtils.getConfirmAccountRemovalDialog(
+                requireActivity(),
+                model,
+                false
+            )
+
+            model.dismissEvent.observe(viewLifecycleOwner) {
+                it.consume {
+                    dialog.dismiss()
+                }
+            }
+
+            model.confirmEvent.observe(viewLifecycleOwner) {
+                it.consume {
+                    viewModel.removeCurrentAccountAndOpenSipSettings()
+                    dialog.dismiss()
+                }
+            }
+
+            dialog.show()
+        }
+
         binding.setAdvancedCallSettingsClickListener {
             if (findNavController().currentDestination?.id == R.id.settingsFragment) {
                 val action = SettingsFragmentDirections.actionSettingsFragmentToSettingsAdvancedCallFragment()
@@ -173,6 +198,12 @@ class SettingsFragment : GenericMainFragment() {
             if (findNavController().currentDestination?.id == R.id.settingsFragment) {
                 val action = SettingsFragmentDirections.actionSettingsFragmentToSettingsDeveloperFragment()
                 findNavController().navigate(action)
+            }
+        }
+
+        viewModel.openSipSettingsEvent.observe(viewLifecycleOwner) {
+            it.consume {
+                startActivity(Intent(requireActivity(), AssistantActivity::class.java))
             }
         }
 

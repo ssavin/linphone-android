@@ -73,6 +73,10 @@ class SettingsViewModel
         MutableLiveData()
     }
 
+    val openSipSettingsEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData()
+    }
+
     // Security settings
     val isVfsEnabled = MutableLiveData<Boolean>()
 
@@ -437,6 +441,28 @@ class SettingsViewModel
     @UiThread
     fun toggleSecurityExpand() {
         expandSecurity.value = expandSecurity.value == false
+    }
+
+    // Removes every local account (mirrors AccountProfileViewModel.deleteAccount(),
+    // just for all accounts instead of one) and opens the KiwiCall SIP-login
+    // flow (AssistantActivity -> LandingFragment) so the user can immediately
+    // enter new SIP settings by email/password, QR code, or by hand - the
+    // "quickly change my SIP settings" shortcut, one tap away instead of the
+    // account profile screen buried in the drawer.
+    @UiThread
+    fun removeCurrentAccountAndOpenSipSettings() {
+        coreContext.postOnCoreThread { core ->
+            for (account in core.accountList) {
+                val identity = account.params.identityAddress?.asStringUriOnly()
+                Log.w("$TAG Removing account [$identity] to open SIP settings")
+                core.removeAccountWithData(account)
+            }
+            if (!core.provisioningUri.isNullOrEmpty()) {
+                Log.w("$TAG Removing remote provisioning URI")
+                core.provisioningUri = null
+            }
+        }
+        openSipSettingsEvent.postValue(Event(true))
     }
 
     @UiThread
