@@ -42,6 +42,10 @@
     and starting Android 15 dataSync is limited to 6 hours per day
     and can't be used with RECEIVE_BOOT_COMPLETED intent either -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Lets the app show the system dialog asking to be whitelisted from
+    battery optimizations, so the keep-alive service above doesn't get
+    silently frozen by Doze/OEM battery managers -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!-- Required starting Android 17 to be able to connect to local network server -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />

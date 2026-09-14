@@ -19,7 +19,9 @@
  */
 package org.linphone.ui.main.viewmodel
 
+import android.content.Context
 import android.os.Build
+import android.os.PowerManager
 import androidx.annotation.RequiresApi
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
@@ -99,6 +101,10 @@ class MainViewModel
     }
 
     val askAccessLocalNetworkPermissionEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData()
+    }
+
+    val askBatteryOptimizationExemptionEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
     }
 
@@ -450,6 +456,24 @@ class MainViewModel
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             coreContext.postOnCoreThread {
                 checkPostNotificationsPermission()
+            }
+        }
+    }
+
+    // Accounts that need the keep-alive service (no push notifications
+    // available, e.g. third-party SIP accounts like KiwiCall's) are exactly
+    // the ones whose registration silently dies when Doze/OEM battery
+    // managers freeze the app - ask, once, to be whitelisted from that.
+    @UiThread
+    fun checkBatteryOptimizationExemption() {
+        coreContext.postOnCoreThread {
+            if (corePreferences.keepServiceAlive && !corePreferences.alreadyAskedBatteryOptimizationPermission) {
+                val context = coreContext.context
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                if (!powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
+                    corePreferences.alreadyAskedBatteryOptimizationPermission = true
+                    askBatteryOptimizationExemptionEvent.postValue(Event(true))
+                }
             }
         }
     }

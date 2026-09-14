@@ -35,6 +35,7 @@ import androidx.lifecycle.LifecycleOwner
 import org.linphone.R
 import org.linphone.databinding.DialogAssistantAcceptConditionsAndPolicyBinding
 import org.linphone.databinding.DialogAssistantCreateAccountConfirmPhoneNumberBinding
+import org.linphone.databinding.DialogBatteryOptimizationBinding
 import org.linphone.databinding.DialogCallConfirmTransferBinding
 import org.linphone.databinding.DialogCancelContactChangesBinding
 import org.linphone.databinding.DialogCancelMeetingBinding
@@ -478,6 +479,22 @@ class DialogUtils {
             )
             binding.viewModel = viewModel
             binding.message.text = message
+
+            return getDialog(context, binding)
+        }
+
+        @UiThread
+        fun getBatteryOptimizationExemptionDialog(
+            context: Context,
+            viewModel: ConfirmationDialogModel
+        ): Dialog {
+            val binding: DialogBatteryOptimizationBinding = DataBindingUtil.inflate(
+                LayoutInflater.from(context),
+                R.layout.dialog_battery_optimization,
+                null,
+                false
+            )
+            binding.viewModel = viewModel
 
             return getDialog(context, binding)
         }

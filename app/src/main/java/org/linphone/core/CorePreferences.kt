@@ -110,6 +110,18 @@ class CorePreferences
             config.setBool("app", "keep_service_alive", value)
         }
 
+    // Whether the battery-optimization-exemption dialog has already been shown
+    // once. Accounts that need the keep-alive service (see keepServiceAlive
+    // above) are the ones that suffer most from OEM/Doze background limits
+    // killing the SIP registration silently - this dialog asks the user to
+    // whitelist the app so that stops happening.
+    @get:AnyThread @set:WorkerThread
+    var alreadyAskedBatteryOptimizationPermission: Boolean
+        get() = config.getBool("app", "already_asked_battery_optimization_permission", false)
+        set(value) {
+            config.setBool("app", "already_asked_battery_optimization_permission", value)
+        }
+
     @get:AnyThread @set:WorkerThread
     var deviceName: String
         get() = config.getString("app", "device", "").orEmpty().trim()

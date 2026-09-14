@@ -34,6 +34,11 @@
     <string name="dialog_no">Нет</string>
     <string name="dialog_yes">Да</string>
     <string name="dialog_remove">Удалить</string>
+
+    <!-- Battery optimization exemption dialog -->
+    <string name="battery_optimization_dialog_title">Разрешить работу в фоне</string>
+    <string name="battery_optimization_dialog_message">Чтобы звонки и сообщения доходили надёжно, разрешите приложению работать в фоне без ограничений батареи.</string>
+    <string name="battery_optimization_dialog_open_settings">Открыть настройки</string>
     <string name="notification_channel_missed_call_name">Уведомления о пропущенных звонках &appName;</string>
     <string name="notification_channel_service_name">Служебные уведомления &appName;</string>
     <string name="notification_channel_chat_name">Уведомления о мгновенных сообщениях &appName;</string>

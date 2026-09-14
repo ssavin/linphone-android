@@ -82,6 +82,11 @@
     <string name="dialog_no">No</string>
     <string name="dialog_yes">Yes</string>
     <string name="dialog_remove">Remove</string>
+
+    <!-- Battery optimization exemption dialog -->
+    <string name="battery_optimization_dialog_title">Allow background activity</string>
+    <string name="battery_optimization_dialog_message">To keep receiving calls and messages reliably, please allow this app to run in the background without battery restrictions.</string>
+    <string name="battery_optimization_dialog_open_settings">Open settings</string>
     <string name="dialog_confirm">Confirm</string>
     <string name="dialog_understood">Understood</string>
     <string name="dialog_do_not_cancel">Do not cancel</string>

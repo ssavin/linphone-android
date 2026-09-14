@@ -31,6 +31,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
+import android.provider.Settings
 import android.view.Gravity
 import android.view.ViewTreeObserver
 import android.view.WindowManager
@@ -73,6 +74,7 @@ import org.linphone.ui.main.viewmodel.MainViewModel
 import org.linphone.ui.main.viewmodel.SharedMainViewModel
 import org.linphone.ui.welcome.WelcomeActivity
 import org.linphone.utils.AppUtils
+import org.linphone.utils.ConfirmationDialogModel
 import org.linphone.utils.DialogUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
@@ -250,6 +252,12 @@ class MainActivity : GenericActivity() {
             it.consume {
                 Log.w("$TAG Asking for ACCESS_LOCAL_NETWORK permission")
                 accessLocalNetworkPermissionLauncher.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+            }
+        }
+
+        viewModel.askBatteryOptimizationExemptionEvent.observe(this) {
+            it.consume {
+                showBatteryOptimizationExemptionDialog()
             }
         }
 
@@ -490,6 +498,34 @@ class MainActivity : GenericActivity() {
         viewModel.enableAccountMonitoring(true)
         viewModel.updateMissingPermissionAlert()
         viewModel.updateAccountsAndNetworkReachability()
+        viewModel.checkBatteryOptimizationExemption()
+    }
+
+    private fun showBatteryOptimizationExemptionDialog() {
+        val model = ConfirmationDialogModel()
+        val dialog = DialogUtils.getBatteryOptimizationExemptionDialog(this, model)
+
+        model.dismissEvent.observe(this) {
+            it.consume {
+                dialog.dismiss()
+            }
+        }
+
+        model.confirmEvent.observe(this) {
+            it.consume {
+                try {
+                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = Uri.parse("package:$packageName")
+                    }
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e("$TAG Failed to start battery optimization exemption settings activity: $e")
+                }
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
     }
 
     override fun onNewIntent(intent: Intent) {
