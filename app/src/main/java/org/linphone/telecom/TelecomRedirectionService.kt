@@ -149,7 +149,7 @@ class TelecomRedirectionService : CallRedirectionService() {
         val address = identity.toUri()
         val account = PhoneAccount.builder(accountHandle, context.getString(R.string.app_name))
             .setAddress(address)
-            .setIcon(Icon.createWithResource(context, R.drawable.linphone_notification))
+            .setIcon(Icon.createWithResource(context, R.drawable.kiwicall_notification))
             .setCapabilities(PhoneAccount.CAPABILITY_CONNECTION_MANAGER)
             .setHighlightColor(context.getColor(R.color.main1_500))
             .setShortDescription(context.getString(R.string.app_name))

@@ -106,7 +106,6 @@ class NotificationsManager
         const val INTENT_REMOTE_SIP_URI = "REMOTE_ADDRESS"
 
         const val CHAT_TAG = "Chat"
-        private const val ACCOUNT_ERROR_TAG = "Account Error"
         private const val IN_CALL_ERROR_TAG = "Call Error"
         private const val CALL_REDIRECTION_TAG = "Call Redirection"
 
@@ -115,7 +114,6 @@ class NotificationsManager
 
         private const val DUMMY_NOTIF_ID = 3
         private const val KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID = 5
-        private const val ACCOUNT_REGISTRATION_ERROR_ID = 7
         private const val IN_CALL_FOREGROUND_SERVICE_ERROR_ID = 8
         private const val MISSED_CALL_ID = 10
         private const val CALL_REDIRECTION_ID = 20
@@ -139,7 +137,12 @@ class NotificationsManager
     private val callNotificationsMap: HashMap<String, Notifiable> = HashMap()
     private val chatNotificationsMap: HashMap<String, Notifiable> = HashMap()
     private val previousChatNotifications: ArrayList<Int> = arrayListOf()
-    private val accountsErrorNotificationsMap: HashMap<String, Int> = HashMap()
+
+    // Identities of the accounts currently in a Failed registration state. Drives which small
+    // icon (kiwicall_notification vs kiwicall_notification_disconnected) the persistent
+    // "keep alive" notification shows, instead of popping up a separate ongoing notification
+    // for every reconnection cycle.
+    private val accountsWithRegistrationError: HashSet<String> = HashSet()
 
     private val notificationsMap = HashMap<Int, Notification>()
 
@@ -471,18 +474,16 @@ class NotificationsManager
             state: RegistrationState?,
             message: String
         ) {
+            val identity = account.params.identityAddress?.asStringUriOnly().orEmpty()
             if (state == RegistrationState.Failed) {
-                showAccountErrorNotification(account)
+                accountsWithRegistrationError.add(identity)
             } else if (state == RegistrationState.Ok) {
-                // Check if a notification exists for that identity address and if yes, remove it
-                val identity = account.params.identityAddress?.asStringUriOnly().orEmpty()
-                val notificationId = accountsErrorNotificationsMap.getOrDefault(identity, -1)
-                if (notificationId != -1) {
-                    accountsErrorNotificationsMap.remove(identity)
-                    Log.i("$TAG Removing account registration error notification with ID [$notificationId] for [$identity]")
-                    cancelNotification(notificationId, ACCOUNT_ERROR_TAG)
-                }
+                accountsWithRegistrationError.remove(identity)
             }
+            // Rather than popping up a separate "registration failed" notification on every
+            // reconnection cycle, reflect the connection state on the persistent keep-alive
+            // notification's icon instead.
+            refreshKeepAliveNotificationIcon()
         }
 
         @WorkerThread
@@ -1010,7 +1011,7 @@ class NotificationsManager
                 )!!
             }
             val builder = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.linphone_notification)
+                .setSmallIcon(R.drawable.kiwicall_notification)
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
@@ -1234,52 +1235,6 @@ class NotificationsManager
             "$TAG Updating chat notification with ID [${notifiable.notificationId}]"
         )
         notify(notifiable.notificationId, notification, CHAT_TAG)
-    }
-
-    @WorkerThread
-    private fun showAccountErrorNotification(account: Account) {
-        // Don't do it if background mode is not enabled, otherwise it will trigger every time
-        // the app is put in background and it's not relevant as long as push notifications work
-        if (!corePreferences.keepServiceAlive) return
-
-        // Do not notify connexion error in background if account if push notification are available
-        if (account.params.isPushNotificationAvailable) return
-
-        if (Compatibility.isPostNotificationsPermissionGranted(context)) {
-            val pendingIntent = TaskStackBuilder.create(context).run {
-                addNextIntentWithParentStack(
-                    Intent(context, MainActivity::class.java).apply {
-                        action = Intent.ACTION_MAIN // Needed as well
-                    }
-                )
-                getPendingIntent(
-                    ACCOUNT_REGISTRATION_ERROR_ID,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )!!
-            }
-
-            val identity = account.params.identityAddress?.asStringUriOnly().orEmpty()
-            val notificationId = identity.hashCode()
-
-            val notification = NotificationCompat.Builder(
-                context,
-                context.getString(R.string.notification_channel_account_error_id)
-            )
-                .setContentTitle(context.getString(R.string.notification_account_registration_error_title, identity))
-                .setContentText(context.getString(R.string.notification_account_registration_error_message))
-                .setSmallIcon(R.drawable.linphone_notification)
-                .setAutoCancel(false)
-                .setOngoing(true)
-                .setCategory(NotificationCompat.CATEGORY_ERROR)
-                .setWhen(System.currentTimeMillis())
-                .setShowWhen(true)
-                .setContentIntent(pendingIntent)
-                .build()
-
-            accountsErrorNotificationsMap[identity] = notificationId
-            Log.i("$TAG Showing account registration error notification with ID [$notificationId] for [$identity]")
-            notify(notificationId, notification, ACCOUNT_ERROR_TAG)
-        }
     }
 
     @WorkerThread
@@ -1889,31 +1844,7 @@ class NotificationsManager
 
         val service = keepAliveService
         if (service != null) {
-            val pendingIntent = TaskStackBuilder.create(context).run {
-                addNextIntentWithParentStack(
-                    Intent(context, MainActivity::class.java).apply {
-                        action = Intent.ACTION_MAIN // Needed as well
-                    }
-                )
-                getPendingIntent(
-                    KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )!!
-            }
-
-            val builder = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(R.drawable.linphone_notification)
-                .setContentText(AppUtils.getString(R.string.notification_keep_app_alive_description))
-                .setSubText(AppUtils.getString(R.string.notification_keep_app_alive_message))
-                .setAutoCancel(false)
-                .setOngoing(true)
-                .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setShowWhen(false)
-                .setContentIntent(pendingIntent)
-                .setDeleteIntent(getForegroundServiceDismissedIntent())
-            val notification = builder.build()
+            val notification = buildKeepAliveNotification(channelId)
 
             Log.i(
                 "$TAG Keep alive for third party accounts Service found, starting it as foreground using notification ID [$KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID] with type [SPECIAL_USE]"
@@ -1931,6 +1862,57 @@ class NotificationsManager
         } else {
             Log.w("$TAG Keep alive for third party accounts Service hasn't started yet...")
         }
+    }
+
+    // Small icon reflects whether every account is currently registered: a plain KiwiCall glyph
+    // when connected, the same glyph with a small "disconnected" badge otherwise. This replaces
+    // the old separate ongoing "registration failed" notification that used to reappear on every
+    // reconnection cycle.
+    @AnyThread
+    private fun keepAliveNotificationSmallIcon(): Int {
+        return if (accountsWithRegistrationError.isEmpty()) {
+            R.drawable.kiwicall_notification
+        } else {
+            R.drawable.kiwicall_notification_disconnected
+        }
+    }
+
+    @AnyThread
+    private fun buildKeepAliveNotification(channelId: String): Notification {
+        val pendingIntent = TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(
+                Intent(context, MainActivity::class.java).apply {
+                    action = Intent.ACTION_MAIN // Needed as well
+                }
+            )
+            getPendingIntent(
+                KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )!!
+        }
+
+        return NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(keepAliveNotificationSmallIcon())
+            .setContentText(AppUtils.getString(R.string.notification_keep_app_alive_description))
+            .setSubText(AppUtils.getString(R.string.notification_keep_app_alive_message))
+            .setAutoCancel(false)
+            .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setShowWhen(false)
+            .setContentIntent(pendingIntent)
+            .setDeleteIntent(getForegroundServiceDismissedIntent())
+            .build()
+    }
+
+    // Refreshes the persistent keep-alive notification's icon in place (connected/disconnected)
+    // without disturbing the foreground Service it's attached to.
+    @AnyThread
+    private fun refreshKeepAliveNotificationIcon() {
+        if (currentKeepAliveThirdPartyAccountsForegroundServiceNotificationId == -1) return
+        val channelId = context.getString(R.string.notification_channel_service_id)
+        notify(KEEP_ALIVE_FOR_THIRD_PARTY_ACCOUNTS_ID, buildKeepAliveNotification(channelId))
     }
 
     @AnyThread
@@ -2156,7 +2138,7 @@ class NotificationsManager
             setColor(context.resources.getColor(R.color.gray_600, context.theme))
             setColorized(true)
             setOnlyAlertOnce(true)
-            setSmallIcon(R.drawable.linphone_notification)
+            setSmallIcon(R.drawable.kiwicall_notification)
             setCategory(NotificationCompat.CATEGORY_CALL)
             setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             setPriority(NotificationCompat.PRIORITY_HIGH)
