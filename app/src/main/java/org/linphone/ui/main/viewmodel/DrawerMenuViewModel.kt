@@ -246,7 +246,12 @@ class DrawerMenuViewModel
         val account = coreContext.core.defaultAccount ?: return null
         val authInfo = account.findAuthInfo() ?: return null
         val username = authInfo.username
-        val password = authInfo.password
+        // Right after a successful SIP REGISTER, the SDK typically replaces
+        // the plaintext password in AuthInfo with its HA1 digest and clears
+        // the original (confirmed live on desktop, same SDK) - fall back to
+        // HA1 (which the server also accepts, see sip-provisioning.ts)
+        // whenever plaintext isn't available.
+        val password = authInfo.password.orEmpty().ifEmpty { authInfo.ha1.orEmpty() }
         if (username.isNullOrEmpty() || password.isNullOrEmpty()) return null
         return Pair(username, password)
     }
