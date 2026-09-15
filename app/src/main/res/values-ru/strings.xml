@@ -278,6 +278,9 @@
     <string name="drawer_menu_account_connection_status_failed">Ошибка</string>
     <string name="drawer_menu_no_account_configured_yet">Аккаунт пока не настроен</string>
     <string name="drawer_menu_add_account">Добавить аккаунт</string>
+    <string name="drawer_menu_online_status_online">На линии</string>
+    <string name="drawer_menu_online_status_offline">Не на линии</string>
+    <string name="drawer_menu_online_status_network_error">Не удалось связаться с сервером KiwiCall</string>
     <string name="help_about_title">О &appName;</string>
     <string name="help_about_privacy_policy_subtitle">Какую информацию собирает и использует &appName;</string>
     <string name="help_about_version_title">Версия</string>

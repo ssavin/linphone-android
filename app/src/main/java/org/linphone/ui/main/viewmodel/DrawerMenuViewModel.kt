@@ -22,8 +22,19 @@ package org.linphone.ui.main.viewmodel
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MutableLiveData
+import java.io.IOException
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Credentials
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.json.JSONObject
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
+import org.linphone.R
 import org.linphone.core.Account
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
@@ -32,6 +43,7 @@ import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
 import org.linphone.ui.main.model.AccountModel
 import org.linphone.ui.main.model.ShortcutModel
+import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 
 class DrawerMenuViewModel
@@ -39,11 +51,28 @@ class DrawerMenuViewModel
     constructor() : GenericViewModel() {
     companion object {
         private const val TAG = "[Drawer Menu ViewModel]"
+        private const val SELF_STATUS_URL = "https://kiwicall.ru/api/mobile/self-status"
+        private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
     }
 
     val accounts = MutableLiveData<ArrayList<AccountModel>>()
 
     val hideAddAccount = MutableLiveData<Boolean>()
+
+    // "На линии / Не на линии" - self-service queue pause, same effect as the
+    // toggle on the website (see kiwicall's routes/telephony.ts) but callable
+    // from a SIP client that has no browser session, using the account's own
+    // SIP credentials as Basic Auth. Only shown once a successful fetch
+    // confirms this account actually has a KiwiCall operator extension -
+    // hidden (not an error toast) for any other kind of SIP account, since
+    // the feature simply doesn't apply to those.
+    val onlineStatus = MutableLiveData<Boolean>()
+
+    val onlineStatusAvailable = MutableLiveData<Boolean>()
+
+    val onlineStatusUpdating = MutableLiveData<Boolean>()
+
+    private val onlineStatusHttpClient = OkHttpClient()
 
     val hideRecordings = MutableLiveData<Boolean>()
 
@@ -115,6 +144,7 @@ class DrawerMenuViewModel
                 Log.i("$TAG Global state is [${core.globalState}], reload accounts & shortcuts")
                 computeAccountsList()
                 computeShortcuts()
+                fetchOnlineStatus()
             }
         }
     }
@@ -130,6 +160,7 @@ class DrawerMenuViewModel
 
             computeAccountsList()
             computeShortcuts()
+            fetchOnlineStatus()
         }
     }
 
@@ -207,6 +238,108 @@ class DrawerMenuViewModel
             )
         }
         hideAddAccount.postValue(maxAccountsReached)
+    }
+
+    /** (extension, password) from the default account's own auth info, or null if unavailable. */
+    @WorkerThread
+    private fun defaultAccountCredentials(): Pair<String, String>? {
+        val account = coreContext.core.defaultAccount ?: return null
+        val authInfo = account.findAuthInfo() ?: return null
+        val username = authInfo.username
+        val password = authInfo.password
+        if (username.isNullOrEmpty() || password.isNullOrEmpty()) return null
+        return Pair(username, password)
+    }
+
+    @WorkerThread
+    private fun fetchOnlineStatus() {
+        val credentials = defaultAccountCredentials()
+        if (credentials == null) {
+            onlineStatusAvailable.postValue(false)
+            return
+        }
+        val (username, password) = credentials
+
+        val request = Request.Builder()
+            .url(SELF_STATUS_URL)
+            .header("Authorization", Credentials.basic(username, password))
+            .build()
+        onlineStatusHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.w("$TAG Couldn't fetch online status: $e")
+                onlineStatusAvailable.postValue(false)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val bodyString = response.use { it.body?.string().orEmpty() }
+                if (!response.isSuccessful) {
+                    // Not a KiwiCall operator extension (or no extension at all) -
+                    // hide the toggle rather than show an error, it just doesn't
+                    // apply to this account.
+                    onlineStatusAvailable.postValue(false)
+                    return
+                }
+                try {
+                    val json = JSONObject(bodyString)
+                    onlineStatus.postValue(json.optBoolean("online", true))
+                    onlineStatusAvailable.postValue(true)
+                } catch (e: Exception) {
+                    Log.w("$TAG Couldn't parse online status response: $e")
+                    onlineStatusAvailable.postValue(false)
+                }
+            }
+        })
+    }
+
+    @UiThread
+    fun toggleOnlineStatus() {
+        val newValue = onlineStatus.value != true
+        onlineStatusUpdating.value = true
+        coreContext.postOnCoreThread {
+            val credentials = defaultAccountCredentials()
+            if (credentials == null) {
+                onlineStatusUpdating.postValue(false)
+                onlineStatusAvailable.postValue(false)
+                return@postOnCoreThread
+            }
+            val (username, password) = credentials
+
+            val body = JSONObject().apply { put("online", newValue) }
+                .toString().toRequestBody(JSON_MEDIA_TYPE)
+            val request = Request.Builder()
+                .url(SELF_STATUS_URL)
+                .header("Authorization", Credentials.basic(username, password))
+                .post(body)
+                .build()
+            onlineStatusHttpClient.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e("$TAG Couldn't update online status: $e")
+                    onlineStatusUpdating.postValue(false)
+                    showFormattedRedToast(
+                        AppUtils.getString(R.string.drawer_menu_online_status_network_error),
+                        R.drawable.warning_circle
+                    )
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    onlineStatusUpdating.postValue(false)
+                    val bodyString = response.use { it.body?.string().orEmpty() }
+                    val json = try {
+                        JSONObject(bodyString)
+                    } catch (e: Exception) {
+                        null
+                    }
+                    if (!response.isSuccessful || json == null) {
+                        val serverMessage = json?.optString("error").orEmpty().ifEmpty {
+                            AppUtils.getString(R.string.drawer_menu_online_status_network_error)
+                        }
+                        showFormattedRedToast(serverMessage, R.drawable.warning_circle)
+                        return
+                    }
+                    onlineStatus.postValue(json.optBoolean("online", newValue))
+                }
+            })
+        }
     }
 
     @WorkerThread

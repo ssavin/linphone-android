@@ -139,7 +139,44 @@
                 app:layout_constraintWidth_max="@dimen/button_max_width"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/separator" />
+                app:layout_constraintBottom_toTopOf="@id/online_status_row" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/online_status_row"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="15dp"
+                android:visibility="@{viewModel.onlineStatusAvailable ? View.VISIBLE : View.GONE, default=gone}"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/separator">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/default_text_style"
+                    android:id="@+id/online_status_label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@{viewModel.onlineStatus ? @string/drawer_menu_online_status_online : @string/drawer_menu_online_status_offline}"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/online_status_switch"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    style="@style/material_switch_style"
+                    android:id="@+id/online_status_switch"
+                    android:onClick="@{() -> viewModel.toggleOnlineStatus()}"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:enabled="@{!viewModel.onlineStatusUpdating}"
+                    android:checked="@{viewModel.onlineStatus}"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <View
                 android:id="@+id/separator"
