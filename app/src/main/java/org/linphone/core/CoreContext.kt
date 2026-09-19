@@ -53,6 +53,7 @@ import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.compatibility.Compatibility
 import org.linphone.contacts.ContactsManager
+import org.linphone.contacts.SharedContactsManager
 import org.linphone.core.tools.Log
 import org.linphone.notifications.NotificationsManager
 import org.linphone.telecom.TelecomManager
@@ -78,6 +79,8 @@ class CoreContext
     }
 
     val contactsManager = ContactsManager()
+
+    val sharedContactsManager = SharedContactsManager()
 
     val notificationsManager = NotificationsManager(context)
 
@@ -834,6 +837,7 @@ class CoreContext
         }
 
         contactsManager.onCoreStarted(core)
+        sharedContactsManager.onCoreStarted()
         telecomManager.onCoreStarted(core)
         notificationsManager.onCoreStarted(core, oldVersion < 600000) // Re-create channels when migrating from a non 6.0 version
         Log.i("$TAG Started contacts, telecom & notifications managers")
