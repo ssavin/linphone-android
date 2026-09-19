@@ -59,6 +59,12 @@ alerts_enabled=1
 # instead of a raw manual SIP form.
 assistant_go_directly_to_third_party_sip_account_login=1
 assistant_third_party_sip_account_domain=200.165.231.27:5060
-assistant_third_party_sip_account_transport=UDP
+# TCP over UDP: mobile carrier-grade NAT tends to drop idle UDP bindings
+# within 30-60s, well under our REGISTER refresh interval, causing silent
+# unreachability the app has no way to detect until the next natural
+# refresh or network-change event. TCP is a real connection - it survives
+# NAT idle timeouts far longer and fails visibly (socket close) instead of
+# silently, so refreshRegisters() gets a chance to react sooner.
+assistant_third_party_sip_account_transport=TCP
 
 ## End of factory rc

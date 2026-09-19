@@ -23,6 +23,9 @@ val linphoneLibs = File("$sdkPath/libs/")
 val linphoneDebugLibs = File("$sdkPath/libs-debug/")
 val firebaseCloudMessagingAvailable = googleServices.exists()
 val crashlyticsAvailable = googleServices.exists() && linphoneLibs.exists() && linphoneDebugLibs.exists()
+// Shared key for the debug-logs upload endpoint on kiwicall.ru; kept out of git,
+// supplied at build time (empty => uploads are simply rejected by the server).
+val logsUploadKey = System.getenv("KIWICALL_LOGS_UPLOAD_KEY") ?: ""
 
 if (firebaseCloudMessagingAvailable) {
     println("google-services.json found, enabling Firebase CloudMessaging feature")
@@ -187,6 +190,7 @@ android {
                 }
             }
             buildConfigField("Boolean", "CRASHLYTICS_ENABLED", crashlyticsAvailable.toString())
+            buildConfigField("String", "LOGS_UPLOAD_KEY", "\"$logsUploadKey\"")
         }
 
         getByName("release") {
@@ -214,6 +218,7 @@ android {
                 }
             }
             buildConfigField("Boolean", "CRASHLYTICS_ENABLED", crashlyticsAvailable.toString())
+            buildConfigField("String", "LOGS_UPLOAD_KEY", "\"$logsUploadKey\"")
         }
     }
 

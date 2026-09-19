@@ -158,6 +158,18 @@ class CoreContext
     // still being alive.
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
+    // Aggressive OEM battery managers (Huawei EMUI, Realme/OPPO ColorOS, MIUI,
+    // etc.) can freeze this process for extended periods even with the
+    // foreground service and battery-optimization exemption in place - the
+    // process simply doesn't run at all, so it never gets the chance to
+    // notice a missed REGISTER refresh or a network-availability callback.
+    // A periodic, unconditional refreshRegisters() call is a cheap extra
+    // safety net: whenever the process DOES get to run again, it retries
+    // registration immediately instead of waiting for the next natural
+    // refresh interval or network change event.
+    private var registrationWatchdogRunnable: Runnable? = null
+    private val registrationWatchdogIntervalMs = 2 * 60 * 1000L // 2 minutes
+
     private lateinit var proximityWakeLock: PowerManager.WakeLock
 
     @SuppressLint("HandlerLeak")
@@ -811,6 +823,16 @@ class CoreContext
             Log.i("$TAG No configuration migration required")
         }
 
+        // Debug logs shared from the app must go to our own infrastructure,
+        // not Belledonne's files.linphone.org - checked unconditionally on
+        // every start (not just on version migration) since existing installs
+        // already have the old URL persisted from a prior run.
+        val logsUploadUrl = "https://kiwicall.ru/api/mobile/logs/upload?key=${BuildConfig.LOGS_UPLOAD_KEY}"
+        if (core.logCollectionUploadServerUrl != logsUploadUrl) {
+            Log.i("$TAG Redirecting debug logs upload to kiwicall.ru")
+            core.logCollectionUploadServerUrl = logsUploadUrl
+        }
+
         contactsManager.onCoreStarted(core)
         telecomManager.onCoreStarted(core)
         notificationsManager.onCoreStarted(core, oldVersion < 600000) // Re-create channels when migrating from a non 6.0 version
@@ -836,6 +858,16 @@ class CoreContext
         }
         connectivityManager.registerDefaultNetworkCallback(callback)
         networkCallback = callback
+
+        val watchdog = object : Runnable {
+            override fun run() {
+                Log.i("$TAG Registration watchdog tick, forcing a refresh as an extra safety net")
+                core.refreshRegisters()
+                coreThread.postDelayed(this, registrationWatchdogIntervalMs)
+            }
+        }
+        registrationWatchdogRunnable = watchdog
+        coreThread.postDelayed(watchdog, registrationWatchdogIntervalMs)
 
         val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
         if (!powerManager.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK)) {
@@ -864,6 +896,11 @@ class CoreContext
             val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             connectivityManager.unregisterNetworkCallback(it)
             networkCallback = null
+        }
+
+        registrationWatchdogRunnable?.let {
+            coreThread.removeCallbacks(it)
+            registrationWatchdogRunnable = null
         }
 
         contactsManager.onCoreStopped(core)
