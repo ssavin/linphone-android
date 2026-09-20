@@ -16,6 +16,9 @@
             name="deleteClickListener"
             type="View.OnClickListener" />
         <variable
+            name="suggestClickListener"
+            type="View.OnClickListener" />
+        <variable
             name="goToSharedMediaClickListener"
             type="View.OnClickListener" />
         <variable
@@ -675,6 +678,25 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/action_share"/>
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        style="@style/context_menu_action_label_style"
+                        android:id="@+id/action_suggest"
+                        android:onClick="@{suggestClickListener}"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="@dimen/screen_bottom_margin"
+                        android:background="@drawable/action_background_full"
+                        android:text="@string/contact_details_suggest"
+                        android:drawableStart="@drawable/user_circle_plus"
+                        android:visibility="@{viewModel.isStored &amp;&amp; !viewModel.isReadOnly ? View.VISIBLE : View.GONE}"
+                        app:layout_constraintWidth_max="@dimen/section_max_width"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/action_delete"/>
 
                     <View
                         android:layout_width="0dp"

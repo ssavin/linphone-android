@@ -135,6 +135,10 @@ class ContactViewModel
         MutableLiveData()
     }
 
+    val suggestPhonesEvent: MutableLiveData<Event<Pair<String, Array<String>>>> by lazy {
+        MutableLiveData()
+    }
+
     val contactRemovedEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
     }
@@ -400,6 +404,37 @@ class ContactViewModel
                     }
                 } else {
                     Log.e("$TAG Failed to dump contact as vCard string")
+                }
+            }
+        }
+    }
+
+    /** Opt-in "В общую книгу": asks the UI which of the contact's numbers to send. */
+    @UiThread
+    fun startSuggestToSharedBook() {
+        coreContext.postOnCoreThread {
+            if (::friend.isInitialized) {
+                val phones = friend.phoneNumbers.filter { it.isNotBlank() }
+                if (phones.isEmpty()) {
+                    showRedToast(R.string.contact_suggest_no_phone_toast, R.drawable.warning_circle)
+                } else {
+                    suggestPhonesEvent.postValue(Event(Pair(friend.name.orEmpty(), phones.toTypedArray())))
+                }
+            }
+        }
+    }
+
+    @UiThread
+    fun suggestToSharedBook(name: String, phones: List<String>) {
+        coreContext.postOnCoreThread {
+            coreContext.sharedContactsManager.suggestContact(name, phones) { queued, known, failed ->
+                when {
+                    failed > 0 && queued == 0 && known == 0 ->
+                        showRedToast(R.string.contact_suggest_failed_toast, R.drawable.warning_circle)
+                    queued > 0 ->
+                        showGreenToast(R.string.contact_suggest_sent_toast, R.drawable.check)
+                    else ->
+                        showGreenToast(R.string.contact_suggest_known_toast, R.drawable.check)
                 }
             }
         }

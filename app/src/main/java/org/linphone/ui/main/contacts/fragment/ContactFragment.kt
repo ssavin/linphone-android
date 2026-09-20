@@ -28,6 +28,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -113,6 +114,10 @@ class ContactFragment : SlidingPaneChildFragment() {
 
         binding.setDeleteClickListener {
             showDeleteConfirmationDialog()
+        }
+
+        binding.setSuggestClickListener {
+            viewModel.startSuggestToSharedBook()
         }
 
         binding.setGoToSharedMediaClickListener {
@@ -239,6 +244,12 @@ class ContactFragment : SlidingPaneChildFragment() {
         viewModel.startCallToDeviceToIncreaseTrustEvent.observe(viewLifecycleOwner) {
             it.consume { triple ->
                 callDirectlyOrShowConfirmTrustCallDialog(triple.first, triple.second, triple.third)
+            }
+        }
+
+        viewModel.suggestPhonesEvent.observe(viewLifecycleOwner) {
+            it.consume { (name, phones) ->
+                showSuggestToSharedBookDialog(name, phones)
             }
         }
 
@@ -404,6 +415,29 @@ class ContactFragment : SlidingPaneChildFragment() {
             }
         }
 
+        dialog.show()
+    }
+
+    private fun showSuggestToSharedBookDialog(name: String, phones: Array<String>) {
+        // Nothing leaves the device before the user confirms: only the name and
+        // the numbers ticked here are sent, and an admin still has to approve them.
+        val checked = BooleanArray(phones.size) { true }
+        val dialog = AlertDialog.Builder(requireActivity())
+            .setTitle(getString(R.string.contact_suggest_dialog_title, name))
+            .setMessage(R.string.contact_suggest_dialog_message)
+            .setMultiChoiceItems(phones, checked) { _, which, isChecked ->
+                checked[which] = isChecked
+            }
+            .setPositiveButton(R.string.contact_suggest_dialog_send) { d, _ ->
+                val selected = phones.filterIndexed { i, _ -> checked[i] }
+                if (selected.isNotEmpty()) {
+                    Log.i("$TAG Suggesting [${selected.size}] number(s) to the shared address book")
+                    viewModel.suggestToSharedBook(name, selected)
+                }
+                d.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel) { d, _ -> d.dismiss() }
+            .create()
         dialog.show()
     }
 }

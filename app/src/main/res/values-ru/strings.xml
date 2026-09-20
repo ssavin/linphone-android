@@ -946,4 +946,12 @@
     <string name="conversation_warning_unsafe_bottom_sheet_message">Сообщения в этом диалоге могут быть перехвачены и прочитаны посторонними людьми, конфиденциальность не гарантирована!</string>
     <string name="call_stats_ip_family_label">Диапазон IP: %s</string>
     <string name="conversation_pdf_file_error_toast">Невозможно открыть этот PDF-файл, возможно он повреждён</string>
+    <string name="contact_details_suggest">В общую книгу</string>
+    <string name="contact_suggest_dialog_title">Предложить «%s» в общую адресную книгу?</string>
+    <string name="contact_suggest_dialog_message">Администратору на проверку уйдут только имя и отмеченные номера. Остальные данные контакта останутся на этом устройстве.</string>
+    <string name="contact_suggest_dialog_send">Отправить</string>
+    <string name="contact_suggest_no_phone_toast">У контакта нет номера телефона</string>
+    <string name="contact_suggest_sent_toast">Отправлено администратору на проверку</string>
+    <string name="contact_suggest_known_toast">Этот номер уже есть в общей книге</string>
+    <string name="contact_suggest_failed_toast">Не удалось отправить контакт. Проверьте соединение и повторите</string>
 </resources>

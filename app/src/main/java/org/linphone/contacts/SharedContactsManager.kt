@@ -21,12 +21,15 @@ package org.linphone.contacts
 
 import androidx.annotation.WorkerThread
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicInteger
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Credentials
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONObject
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -46,6 +49,7 @@ class SharedContactsManager {
     companion object {
         private const val TAG = "[Shared Contacts]"
         private const val CONTACTS_URL = "https://kiwicall.ru/api/mobile/contacts"
+        private const val SUGGEST_URL = "https://kiwicall.ru/api/mobile/contacts/suggest"
         private const val SHARED_FRIEND_LIST = "kiwicall_shared"
         private const val REF_KEY_PREFIX = "kiwicall:"
         private const val START_DELAY_MS = 5_000L
@@ -135,6 +139,63 @@ class SharedContactsManager {
                 }
             }
         })
+    }
+
+    /**
+     * Opt-in: sends one contact (name + the chosen phone numbers, nothing else)
+     * to the clinic admin's moderation queue. [onResult] is called from an
+     * OkHttp thread with (queued, alreadyKnown, failed) counters.
+     */
+    @WorkerThread
+    fun suggestContact(name: String, phones: List<String>, onResult: (Int, Int, Int) -> Unit) {
+        val credentials = defaultAccountCredentials(coreContext.core)
+        if (credentials == null || phones.isEmpty()) {
+            onResult(0, 0, phones.size.coerceAtLeast(1))
+            return
+        }
+        val authorization = Credentials.basic(credentials.first, credentials.second)
+        val remaining = AtomicInteger(phones.size)
+        val queued = AtomicInteger()
+        val known = AtomicInteger()
+        val failed = AtomicInteger()
+
+        val done = {
+            if (remaining.decrementAndGet() == 0) {
+                onResult(queued.get(), known.get(), failed.get())
+            }
+        }
+
+        for (phone in phones) {
+            val payload = JSONObject().put("name", name).put("phone", phone).toString()
+            val request = Request.Builder()
+                .url(SUGGEST_URL)
+                .header("Authorization", authorization)
+                .post(payload.toRequestBody("application/json".toMediaType()))
+                .build()
+            httpClient.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.w("$TAG Couldn't send contact suggestion: $e")
+                    failed.incrementAndGet()
+                    done()
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    val body = response.use { it.body?.string().orEmpty() }
+                    if (response.isSuccessful) {
+                        val status = try {
+                            JSONObject(body).optString("status")
+                        } catch (e: Exception) {
+                            ""
+                        }
+                        if (status == "pending") queued.incrementAndGet() else known.incrementAndGet()
+                    } else {
+                        Log.w("$TAG Suggestion refused with code [${response.code}]")
+                        failed.incrementAndGet()
+                    }
+                    done()
+                }
+            })
+        }
     }
 
     private fun finish(success: Boolean) {

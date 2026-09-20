@@ -1097,4 +1097,12 @@
     <string name="managed_xml_config_description" translatable="false">Raw XML provisioning content applied on startup.</string>
     <string name="managed_root_ca_title" translatable="false">Root CA certificate</string>
     <string name="managed_root_ca_description" translatable="false">PEM-encoded root certificate(s) used to validate TLS connections.</string>
+    <string name="contact_details_suggest">Add to shared address book</string>
+    <string name="contact_suggest_dialog_title">Add %s to the shared address book?</string>
+    <string name="contact_suggest_dialog_message">Only the name and the ticked numbers will be sent to your administrator for review. Other contact data stays on this device.</string>
+    <string name="contact_suggest_dialog_send">Send</string>
+    <string name="contact_suggest_no_phone_toast">This contact has no phone number</string>
+    <string name="contact_suggest_sent_toast">Sent to the administrator for review</string>
+    <string name="contact_suggest_known_toast">This number is already in the shared address book</string>
+    <string name="contact_suggest_failed_toast">The contact was not sent. Check your connection and try again</string>
 </resources>
