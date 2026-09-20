@@ -29,6 +29,9 @@ import androidx.annotation.WorkerThread
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
@@ -36,6 +39,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
@@ -83,6 +87,9 @@ class CurrentCallViewModel
     val displayedName = MutableLiveData<String>()
 
     val displayedAddress = MutableLiveData<String>()
+
+    // CRM caller card (visits, last call, next appointment) for incoming calls
+    val crmCardText = MutableLiveData<String>()
 
     val isVideoEnabled = MutableLiveData<Boolean>()
 
@@ -1069,6 +1076,56 @@ class CurrentCallViewModel
     }
 
     @WorkerThread
+    private fun loadCrmCard(call: Call, number: String) {
+        crmCardText.postValue("")
+        coreContext.sharedContactsManager.lookupClient(number) { json ->
+            if (json == null) return@lookupClient
+            val text = formatCrmCard(json)
+            coreContext.postOnCoreThread {
+                // The call may have ended or been replaced while the request was running
+                if (currentCall == call) crmCardText.postValue(text)
+            }
+        }
+    }
+
+    private fun formatCrmCard(json: JSONObject): String {
+        val lines = arrayListOf<String>()
+        val client = json.optJSONObject("client")
+        val visits = client?.optInt("visitsCount", 0) ?: 0
+        if (visits > 0) lines.add(AppUtils.getString(R.string.crm_card_visits_count).format(visits))
+
+        json.optJSONArray("recentCalls")?.optJSONObject(0)?.let { last ->
+            try {
+                val local = Instant.parse(last.optString("startedAt")).atZone(ZoneId.systemDefault())
+                lines.add(
+                    AppUtils.getString(R.string.crm_card_last_call).format(
+                        DateTimeFormatter.ofPattern("dd.MM HH:mm").format(local)
+                    )
+                )
+            } catch (e: Exception) {
+                // Malformed date: skip this line
+            }
+        }
+
+        json.optJSONArray("appointments")?.optJSONObject(0)?.let { appointment ->
+            // Postgres timestamp string: "2026-09-20 10:30:00" (or with a 'T')
+            val raw = appointment.optString("startsAt").replace('T', ' ')
+            if (raw.length >= 16) {
+                val service = appointment.optString("serviceName")
+                val startsAt = "${raw.substring(8, 10)}.${raw.substring(5, 7)} ${raw.substring(11, 16)}"
+                lines.add(
+                    AppUtils.getString(R.string.crm_card_appointment).format(startsAt) +
+                        if (service.isNotEmpty()) " · $service" else ""
+                )
+            }
+        }
+
+        val comment = client?.optString("comment").orEmpty().trim()
+        if (comment.isNotEmpty()) lines.add(comment.take(120))
+        return lines.joinToString("\n")
+    }
+
+    @WorkerThread
     private fun configureCall(call: Call) {
         Log.i(
             "$TAG Configuring call with remote address [${call.remoteAddress.asStringUriOnly()}] as current"
@@ -1193,6 +1250,10 @@ class CurrentCallViewModel
             LinphoneUtils.getAddressAsCleanStringUriOnly(address)
         }
         displayedAddress.postValue(uri)
+
+        if (call.dir == Call.Dir.Incoming && conferenceInfo == null) {
+            loadCrmCard(call, address.username.orEmpty())
+        }
 
         val model = if (conferenceInfo != null) {
             coreContext.contactsManager.getContactAvatarModelForConferenceInfo(conferenceInfo)

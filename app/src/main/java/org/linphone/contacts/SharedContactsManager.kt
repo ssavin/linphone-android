@@ -49,6 +49,7 @@ class SharedContactsManager {
     companion object {
         private const val TAG = "[Shared Contacts]"
         private const val CONTACTS_URL = "https://kiwicall.ru/api/mobile/contacts"
+        private const val LOOKUP_URL = "https://kiwicall.ru/api/mobile/clients/lookup"
         private const val SUGGEST_URL = "https://kiwicall.ru/api/mobile/contacts/suggest"
         private const val SHARED_FRIEND_LIST = "kiwicall_shared"
         private const val REF_KEY_PREFIX = "kiwicall:"
@@ -137,6 +138,41 @@ class SharedContactsManager {
                     Log.e("$TAG Couldn't parse shared contacts response: $e")
                     finish(success = false)
                 }
+            }
+        })
+    }
+
+    /**
+     * CRM caller card: asks the server what it knows about [phone]. [onResult]
+     * gets the response JSON when a client was found, null otherwise (unknown
+     * number, no credentials, network error). Called from an OkHttp thread.
+     */
+    @WorkerThread
+    fun lookupClient(phone: String, onResult: (JSONObject?) -> Unit) {
+        val credentials = defaultAccountCredentials(coreContext.core)
+        if (credentials == null || phone.count { it.isDigit() } < 7) {
+            onResult(null)
+            return
+        }
+        val url = LOOKUP_URL.toHttpUrl().newBuilder().addQueryParameter("phone", phone).build()
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", Credentials.basic(credentials.first, credentials.second))
+            .build()
+        httpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.w("$TAG CRM lookup failed: $e")
+                onResult(null)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.use { it.body?.string().orEmpty() }
+                val json = try {
+                    if (response.isSuccessful) JSONObject(body) else null
+                } catch (e: Exception) {
+                    null
+                }
+                onResult(if (json?.optBoolean("found", false) == true) json else null)
             }
         })
     }

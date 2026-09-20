@@ -1104,5 +1104,8 @@
     <string name="contact_suggest_no_phone_toast">This contact has no phone number</string>
     <string name="contact_suggest_sent_toast">Sent to the administrator for review</string>
     <string name="contact_suggest_known_toast">This number is already in the shared address book</string>
+    <string name="crm_card_visits_count">Visits: %d</string>
+    <string name="crm_card_last_call">Last call: %s</string>
+    <string name="crm_card_appointment">Next appointment: %s</string>
     <string name="contact_suggest_failed_toast">The contact was not sent. Check your connection and try again</string>
 </resources>
