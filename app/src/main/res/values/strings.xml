@@ -136,11 +136,11 @@
     <!-- First screens user see when app is installed and started -->
     <string name="welcome_page_title">Welcome</string>
     <string name="welcome_page_subtitle">in &appName;</string>
-    <string name="welcome_page_1_message">A <b>secured</b>, <b>open source</b> and <b>French</b> communication app.</string>
-    <string name="welcome_page_2_title">Secured</string>
-    <string name="welcome_page_2_message">Your communications are safe thanks to our <b>end-to-end encryption</b>.</string>
-    <string name="welcome_page_3_title">Open source</string>
-    <string name="welcome_page_3_message">A <b>free</b> and open source application since <b>2001</b>.</string>
+    <string name="welcome_page_1_message">Call center calls, client cards and a shared address book <b>in one app</b>.</string>
+    <string name="welcome_page_2_title">Client card</string>
+    <string name="welcome_page_2_message">When someone calls, you see <b>who it is</b>: name, history and appointments.</string>
+    <string name="welcome_page_3_title">Shared address book</string>
+    <string name="welcome_page_3_message">Colleagues and clients of your clinic in one place, <b>on every device</b>.</string>
 
     <!-- Generic toasts -->
     <string name="phone_number_copied_to_clipboard_toast">Phone number copied into clipboard</string>

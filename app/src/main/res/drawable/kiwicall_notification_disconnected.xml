@@ -12,7 +12,7 @@
         android:name="pulse"
         android:pathData="M15.5,7.25L12.5,7.25L10.25,14L5.75,0.5L3.5,7.25L0.5,7.25"
         android:strokeColor="#ffffff"
-        android:strokeWidth="1.6"
+        android:strokeWidth="2.8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"/>
     <!-- Small "disconnected" badge: circle with a cross, bottom-right corner. -->

@@ -9,7 +9,7 @@
         android:name="pulse"
         android:pathData="M22,12H18L15,21L9,3L6,12H2"
         android:strokeColor="#ffffff"
-        android:strokeWidth="2.2"
+        android:strokeWidth="3.4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"/>
 </vector>

@@ -59,8 +59,8 @@
     </plurals>
     <string name="notification_keep_app_alive_message">Нажмите, чтобы открыть</string>
     <string name="welcome_page_subtitle">в &appName;</string>
-    <string name="welcome_page_3_title">Открытый исходный код</string>
-    <string name="welcome_page_3_message"><b>Бесплатное</b> приложение с открытым исходным кодом с <b>2001 года</b>.</string>
+    <string name="welcome_page_3_title">Общая книга</string>
+    <string name="welcome_page_3_message">Коллеги и клиенты вашей клиники в одном месте, <b>на всех устройствах</b>.</string>
     <string name="sip_address_copied_to_clipboard_toast">SIP-адрес скопирован в буфер обмена</string>
     <string name="new_account_configured_toast">Новая учетная запись настроена</string>
     <string name="file_successfully_exported_to_documents_toast">Файл экспортирован в документы</string>
@@ -97,7 +97,7 @@
     <string name="authentication_id">Идентификатор аутентификации (если отличается)</string>
     <string name="dialog_deny">Отказать</string>
     <string name="notification_channel_incoming_call_name">Уведомления о входящих звонках &appName;</string>
-    <string name="welcome_page_2_message">Ваши коммуникации защищены благодаря нашему <b>сквозному шифрованию</b>.</string>
+    <string name="welcome_page_2_message">При входящем звонке сразу видно, <b>кто звонит</b>: имя, история обращений и записи.</string>
     <string name="media_playback_low_volume_warning_toast">Громкость мультимедиа низкая, вы можете ничего не услышать!</string>
     <string name="assistant_dialog_general_terms_and_privacy_policy_title">Общие положения и политика конфиденциальности</string>
     <string name="assistant_dialog_general_terms_and_privacy_policy_message">Продолжая, вы принимаете наши %1$s и %2$s.</string>
@@ -120,8 +120,8 @@
     <string name="notification_channel_service_desc">Эта служба будет работать постоянно, чтобы поддерживать приложение в рабочем состоянии и позволять вам принимать звонки и сообщения без push-уведомлений.</string>
     <string name="notification_mark_message_as_read">Отметить как прочитанное</string>
     <string name="welcome_page_title">Добро пожаловать</string>
-    <string name="welcome_page_1_message"><b>Защищённое</b>, <b>с открытым исходным кодом</b> и <b>французское</b> приложение для общения.</string>
-    <string name="welcome_page_2_title">Безопасный</string>
+    <string name="welcome_page_1_message">Звонки колл-центра, карточка клиента и общая адресная книга <b>в одном приложении</b>.</string>
+    <string name="welcome_page_2_title">Карточка клиента</string>
     <string name="file_successfully_exported_to_media_store_toast">Файл экспортирован в собственную галерею</string>
     <string name="export_file_to_media_store_error_toast">Ошибка при попытке экспортировать файл в собственную галерею</string>
     <string name="assistant_login_third_party_sip_account_title">Сторонний SIP-аккаунт</string>

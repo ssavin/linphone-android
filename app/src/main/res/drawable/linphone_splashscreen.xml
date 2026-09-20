@@ -1,16 +1,7 @@
-<vector
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:name="vector"
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="60dp"
     android:height="60dp"
     android:viewportWidth="180"
     android:viewportHeight="180">
-  <path
-      android:name="path"
-      android:pathData="M 115 90 L 105 90 L 97.5 112.5 L 82.5 67.5 L 75 90 L 65 90"
-      android:strokeColor="@color/kiwicall_main_500"
-      android:strokeWidth="4.5"
-      android:strokeLineCap="round"
-      android:strokeLineJoin="round"
-      android:fillColor="#00000000"/>
+  <path android:name="path" android:pathData="M 140.0 90.0 L 120.0 90.0 L 105.0 135.0 L 75.0 45.0 L 60.0 90.0 L 40.0 90.0" android:strokeColor="@color/kiwicall_main_500" android:strokeWidth="12" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"/>
 </vector>
