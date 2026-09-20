@@ -957,4 +957,12 @@
     <string name="crm_card_last_call">Последний звонок: %s</string>
     <string name="crm_card_appointment">Запись: %s</string>
     <string name="contact_suggest_failed_toast">Не удалось отправить контакт. Проверьте соединение и повторите</string>
+    <string name="contact_details_rename">Назвать контакт</string>
+    <string name="contact_shared_hint">Контакт из общей книги KiwiCall. Изменить его можно в кабинете kiwicall.ru, раздел «Клиенты».</string>
+    <string name="contact_shared_hint_unnamed">Контакт из общей книги KiwiCall. У него пока нет имени, нажмите «Назвать контакт».</string>
+    <string name="contact_rename_dialog_title">Назвать контакт</string>
+    <string name="contact_rename_dialog_message">Введите имя для номера %1$s. Оно сохранится в общей книге и станет видно всем операторам.</string>
+    <string name="contact_rename_dialog_save">Сохранить</string>
+    <string name="contact_rename_done_toast">Имя сохранено в общей книге</string>
+    <string name="contact_rename_failed_toast">Не удалось сохранить имя. Проверьте соединение и повторите</string>
 </resources>

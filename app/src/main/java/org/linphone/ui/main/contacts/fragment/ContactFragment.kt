@@ -23,10 +23,13 @@ import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.provider.ContactsContract
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.FrameLayout
 import androidx.annotation.UiThread
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
@@ -118,6 +121,10 @@ class ContactFragment : SlidingPaneChildFragment() {
 
         binding.setSuggestClickListener {
             viewModel.startSuggestToSharedBook()
+        }
+
+        binding.setRenameClickListener {
+            showRenameSharedContactDialog()
         }
 
         binding.setGoToSharedMediaClickListener {
@@ -416,6 +423,34 @@ class ContactFragment : SlidingPaneChildFragment() {
         }
 
         dialog.show()
+    }
+
+    private fun showRenameSharedContactDialog() {
+        val input = EditText(requireActivity()).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            setSingleLine()
+        }
+        val padding = (24 * resources.displayMetrics.density).toInt()
+        val container = FrameLayout(requireActivity()).apply {
+            setPadding(padding, padding / 2, padding, 0)
+            addView(input)
+        }
+        val currentNumber = viewModel.contact.value?.name?.value.orEmpty()
+        AlertDialog.Builder(requireActivity())
+            .setTitle(R.string.contact_rename_dialog_title)
+            .setMessage(getString(R.string.contact_rename_dialog_message, currentNumber))
+            .setView(container)
+            .setPositiveButton(R.string.contact_rename_dialog_save) { d, _ ->
+                val name = input.text.toString().trim()
+                if (name.length >= 2) {
+                    Log.i("$TAG Naming shared contact")
+                    viewModel.renameSharedContact(name)
+                }
+                d.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel) { d, _ -> d.dismiss() }
+            .create()
+            .show()
     }
 
     private fun showSuggestToSharedBookDialog(name: String, phones: Array<String>) {

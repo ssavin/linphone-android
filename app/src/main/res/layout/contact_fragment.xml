@@ -19,6 +19,9 @@
             name="suggestClickListener"
             type="View.OnClickListener" />
         <variable
+            name="renameClickListener"
+            type="View.OnClickListener" />
+        <variable
             name="goToSharedMediaClickListener"
             type="View.OnClickListener" />
         <variable
@@ -680,6 +683,41 @@
                         app:layout_constraintTop_toBottomOf="@id/action_share"/>
 
                     <androidx.appcompat.widget.AppCompatTextView
+                        style="@style/default_text_style"
+                        android:id="@+id/shared_hint"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="26dp"
+                        android:layout_marginEnd="26dp"
+                        android:layout_marginTop="16dp"
+                        android:text="@{viewModel.isRenameable ? @string/contact_shared_hint_unnamed : @string/contact_shared_hint, default=@string/contact_shared_hint}"
+                        android:textColor="@color/main2_600"
+                        android:textSize="14sp"
+                        android:visibility="@{viewModel.isShared ? View.VISIBLE : View.GONE, default=gone}"
+                        app:layout_constraintWidth_max="@dimen/section_max_width"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/action_delete"/>
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        style="@style/context_menu_action_label_style"
+                        android:id="@+id/action_rename"
+                        android:onClick="@{renameClickListener}"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/action_background_full"
+                        android:text="@string/contact_details_rename"
+                        android:drawableStart="@drawable/pencil_simple"
+                        android:visibility="@{viewModel.isRenameable ? View.VISIBLE : View.GONE, default=gone}"
+                        app:layout_constraintWidth_max="@dimen/section_max_width"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/shared_hint"/>
+
+                    <androidx.appcompat.widget.AppCompatTextView
                         style="@style/context_menu_action_label_style"
                         android:id="@+id/action_suggest"
                         android:onClick="@{suggestClickListener}"
@@ -696,7 +734,7 @@
                         app:layout_constraintWidth_max="@dimen/section_max_width"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toBottomOf="@id/action_delete"/>
+                        app:layout_constraintTop_toBottomOf="@id/action_rename"/>
 
                     <View
                         android:layout_width="0dp"

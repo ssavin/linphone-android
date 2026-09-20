@@ -50,6 +50,7 @@ class SharedContactsManager {
         private const val TAG = "[Shared Contacts]"
         private const val CONTACTS_URL = "https://kiwicall.ru/api/mobile/contacts"
         private const val LOOKUP_URL = "https://kiwicall.ru/api/mobile/clients/lookup"
+        private const val RENAME_URL = "https://kiwicall.ru/api/mobile/contacts/clients/%d/name"
         private const val SUGGEST_URL = "https://kiwicall.ru/api/mobile/contacts/suggest"
         private const val SHARED_FRIEND_LIST = "kiwicall_shared"
         private const val REF_KEY_PREFIX = "kiwicall:"
@@ -173,6 +174,50 @@ class SharedContactsManager {
                     null
                 }
                 onResult(if (json?.optBoolean("found", false) == true) json else null)
+            }
+        })
+    }
+
+    /**
+     * "Назвать контакт": names a shared client that only has a number as its
+     * name. [onResult] gets (success, serverMessage) from an OkHttp thread; on
+     * success the shared list is refreshed right away.
+     */
+    @WorkerThread
+    fun renameClient(clientId: Int, name: String, onResult: (Boolean, String?) -> Unit) {
+        val credentials = defaultAccountCredentials(coreContext.core)
+        if (credentials == null) {
+            onResult(false, null)
+            return
+        }
+        val payload = JSONObject().put("name", name).toString()
+        val request = Request.Builder()
+            .url(RENAME_URL.format(clientId))
+            .header("Authorization", Credentials.basic(credentials.first, credentials.second))
+            .post(payload.toRequestBody("application/json".toMediaType()))
+            .build()
+        httpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.w("$TAG Couldn't rename client: $e")
+                onResult(false, null)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.use { it.body?.string().orEmpty() }
+                val json = try {
+                    JSONObject(body)
+                } catch (e: Exception) {
+                    JSONObject()
+                }
+                if (response.isSuccessful && json.optString("status") == "renamed") {
+                    coreContext.postOnCoreThread {
+                        version = "" // force a full refresh so the new name shows up
+                        sync()
+                    }
+                    onResult(true, null)
+                } else {
+                    onResult(false, json.optString("error").ifEmpty { null })
+                }
             }
         })
     }

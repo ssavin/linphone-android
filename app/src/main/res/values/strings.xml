@@ -1108,4 +1108,12 @@
     <string name="crm_card_last_call">Last call: %s</string>
     <string name="crm_card_appointment">Next appointment: %s</string>
     <string name="contact_suggest_failed_toast">The contact was not sent. Check your connection and try again</string>
+    <string name="contact_details_rename">Name this contact</string>
+    <string name="contact_shared_hint">Contact from the KiwiCall shared address book. It can be edited in the kiwicall.ru cabinet, section \"Clients\".</string>
+    <string name="contact_shared_hint_unnamed">Contact from the KiwiCall shared address book. It has no name yet, use \"Name this contact\".</string>
+    <string name="contact_rename_dialog_title">Name this contact</string>
+    <string name="contact_rename_dialog_message">Enter a name for %1$s. It will be saved in the shared address book and shown to all operators.</string>
+    <string name="contact_rename_dialog_save">Save</string>
+    <string name="contact_rename_done_toast">Name saved in the shared address book</string>
+    <string name="contact_rename_failed_toast">The name was not saved. Check your connection and try again</string>
 </resources>

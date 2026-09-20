@@ -61,6 +61,11 @@ class ContactViewModel
         private const val START_AUDIO_CALL = 0
         private const val START_VIDEO_CALL = 1
         private const val START_CONVERSATION = 2
+
+        // Ref keys of the shared address book (see SharedContactsManager)
+        private const val SHARED_REF_PREFIX = "kiwicall:"
+        private const val SHARED_CLIENT_REF_PREFIX = "kiwicall:cli:"
+        private val UNNAMED_REGEX = Regex("""^[+\d\s()\-]*$""")
     }
 
     val contact = MutableLiveData<ContactAvatarModel>()
@@ -94,6 +99,12 @@ class ContactViewModel
     val isReadOnly = MutableLiveData<Boolean>()
 
     val isNative = MutableLiveData<Boolean>()
+
+    // Contact comes from the shared (call-center) address book
+    val isShared = MutableLiveData<Boolean>()
+
+    // Shared CRM client that has only a phone number instead of a name
+    val isRenameable = MutableLiveData<Boolean>()
 
     val chatDisabled = MutableLiveData<Boolean>()
 
@@ -327,6 +338,11 @@ class ContactViewModel
         isStored.postValue(!coreContext.contactsManager.isContactTemporary(friend))
         isReadOnly.postValue(friend.isReadOnly)
         isNative.postValue(!friend.nativeUri.isNullOrEmpty())
+        val ref = friend.refKey.orEmpty()
+        isShared.postValue(ref.startsWith(SHARED_REF_PREFIX))
+        isRenameable.postValue(
+            ref.startsWith(SHARED_CLIENT_REF_PREFIX) && UNNAMED_REGEX.matches(friend.name.orEmpty())
+        )
 
         contact.value?.destroy()
         contact.postValue(ContactAvatarModel(friend))
@@ -404,6 +420,26 @@ class ContactViewModel
                     }
                 } else {
                     Log.e("$TAG Failed to dump contact as vCard string")
+                }
+            }
+        }
+    }
+
+    /** "Назвать контакт": gives a name to a shared CRM client that has only a number. */
+    @UiThread
+    fun renameSharedContact(name: String) {
+        coreContext.postOnCoreThread {
+            if (!::friend.isInitialized) return@postOnCoreThread
+            val id = friend.refKey.orEmpty().removePrefix(SHARED_CLIENT_REF_PREFIX).toIntOrNull()
+            if (id == null) {
+                showRedToast(R.string.contact_rename_failed_toast, R.drawable.warning_circle)
+                return@postOnCoreThread
+            }
+            coreContext.sharedContactsManager.renameClient(id, name) { ok, serverMessage ->
+                when {
+                    ok -> showGreenToast(R.string.contact_rename_done_toast, R.drawable.check)
+                    !serverMessage.isNullOrEmpty() -> showFormattedRedToast(serverMessage, R.drawable.warning_circle)
+                    else -> showRedToast(R.string.contact_rename_failed_toast, R.drawable.warning_circle)
                 }
             }
         }
