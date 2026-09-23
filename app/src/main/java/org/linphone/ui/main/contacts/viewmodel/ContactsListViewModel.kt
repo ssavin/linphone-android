@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
+import org.linphone.contacts.ContactLoader
 import org.linphone.contacts.ContactsManager.ContactsListener
 import org.linphone.core.Friend
 import org.linphone.core.FriendList
@@ -353,6 +354,16 @@ class ContactsListViewModel
         for (result in results) {
             val friend = result.friend
             if (friend != null) {
+                // The phone's own address book is only meant to fill in a caller's
+                // name at call time when the clinic's shared book doesn't have the
+                // number (see ContactsManager.findContactByAddress, which does
+                // search this list) - it's the operator's personal contacts and
+                // has nothing to do with the clinic, so it doesn't belong in the
+                // shared "Контакты" list itself.
+                if (friend.friendList?.displayName == ContactLoader.NATIVE_ADDRESS_BOOK_FRIEND_LIST) {
+                    continue
+                }
+
                 if (hideEmptyContacts && friend.addresses.isEmpty() && friend.phoneNumbers.isEmpty()) {
                     Log.i("$TAG Friend [${friend.name}] has no SIP address nor phone number, do not show it")
                     continue
