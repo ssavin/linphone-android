@@ -47,6 +47,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import java.io.File
 import kotlin.system.exitProcess
 import org.linphone.BuildConfig
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -70,6 +71,7 @@ class CoreContext
     constructor(val context: Context) : HandlerThread("Core Thread") {
     companion object {
         private const val TAG = "[Core Context]"
+        const val FRIENDS_DATABASE_FILENAME = "kiwicall-friends.db"
     }
 
     lateinit var core: Core
@@ -707,6 +709,12 @@ class CoreContext
         coreThread = Handler(looper)
 
         core = Factory.instance().createCoreWithConfig(corePreferences.config, context)
+        // Pinned (not the SDK's own default name) so backup_rules.xml /
+        // data_extraction_rules.xml can exclude it precisely: this list is
+        // always re-synced from the server (see SharedContactsManager), so
+        // Android restoring a stale copy of it after a reinstall is strictly
+        // worse than starting empty.
+        core.friendsDatabasePath = File(context.filesDir, FRIENDS_DATABASE_FILENAME).absolutePath
         core.isAutoIterateEnabled = true
         core.addListener(coreListener)
 

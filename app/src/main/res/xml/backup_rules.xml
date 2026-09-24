@@ -11,4 +11,13 @@
    <exclude domain="sharedpref" path="device.xml"/>
     -->
     <exclude domain="sharedpref" path="encrypted.pref"/>
+    <!--
+      Shared contacts (kiwicall_shared friend list) always come from the
+      server (see SharedContactsManager) - restoring the old local copy
+      on a fresh install brings back stale/broken state instead of a
+      real resync, which is worse than starting empty.
+    -->
+    <exclude domain="file" path="kiwicall-friends.db"/>
+    <exclude domain="file" path="kiwicall-friends.db-wal"/>
+    <exclude domain="file" path="kiwicall-friends.db-shm"/>
 </full-backup-content>

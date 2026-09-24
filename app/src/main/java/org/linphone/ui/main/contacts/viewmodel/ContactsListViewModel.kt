@@ -163,8 +163,13 @@ class ContactsListViewModel
 
             coreContext.contactsManager.addListener(contactsListener)
             magicSearch = core.createMagicSearch()
-            magicSearch.limitedSearch = true
-            magicSearch.searchLimit = corePreferences.magicSearchResultsLimit
+            // The shared clinic book (Friends source) shares this search with
+            // the phone's own native address book, which can hold thousands
+            // of entries - a capped search fills up with those before the
+            // (usually much smaller) shared contacts even get considered, so
+            // this list would look near-empty on a phone with a big address
+            // book. Unlimited, like favouritesMagicSearch below.
+            magicSearch.limitedSearch = false
             magicSearch.addListener(magicSearchListener)
 
             favouritesMagicSearch = core.createMagicSearch()
